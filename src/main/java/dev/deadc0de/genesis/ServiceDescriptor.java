@@ -1,5 +1,6 @@
 package dev.deadc0de.genesis;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class ServiceDescriptor {
@@ -12,5 +13,9 @@ public class ServiceDescriptor {
         this.name = name;
         this.configuration = configuration;
         this.collaborators = collaborators;
+    }
+
+    public static ServiceDescriptor notParameterized(String name) {
+        return new ServiceDescriptor(name, Collections.emptyMap(), Collections.emptyMap());
     }
 }

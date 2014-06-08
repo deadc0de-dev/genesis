@@ -112,6 +112,65 @@ public class MethodBackedServiceFactoryTest {
         factory.create(serviceGenerator, serviceDescriptor);
     }
 
+    @Test
+    public void whenMethodParameterHasDefaultAnnotationButValueIsNotPresentInConfigurationMapTheDefaultValueIsUsed() throws NoSuchMethodException {
+        final SpyModuleWithDefaults module = new SpyModuleWithDefaults();
+        final Method method = SpyModuleWithDefaults.class.getDeclaredMethod("spy", ServiceGenerator.class, String.class, Object.class);
+        final ServiceFactory factory = new MethodBackedServiceFactory(module, method);
+        final ServiceGenerator serviceGenerator = new StubServiceGenerator();
+        final ServiceDescriptor serviceDescriptor = new ServiceDescriptor("spy",
+                Collections.emptyMap(),
+                Collections.singletonMap("role", new ServiceDescriptor("collaborator",
+                                Collections.emptyMap(),
+                                Collections.emptyMap())));
+        factory.create(serviceGenerator, serviceDescriptor);
+        Assert.assertEquals(SpyModuleWithDefaults.DEFAULT_PARAMETER, module.parameter.get());
+    }
+
+    @Test
+    public void whenMethodParameterHasParameterAnnotationAndConfigurationMapContainsTheValueTheDefaultValueIsIgnored() throws NoSuchMethodException {
+        final SpyModuleWithDefaults module = new SpyModuleWithDefaults();
+        final Method method = SpyModuleWithDefaults.class.getDeclaredMethod("spy", ServiceGenerator.class, String.class, Object.class);
+        final ServiceFactory factory = new MethodBackedServiceFactory(module, method);
+        final ServiceGenerator serviceGenerator = new StubServiceGenerator();
+        final ServiceDescriptor serviceDescriptor = new ServiceDescriptor("spy",
+                Collections.singletonMap("parameter", "argument"),
+                Collections.singletonMap("role", new ServiceDescriptor("collaborator",
+                                Collections.emptyMap(),
+                                Collections.emptyMap())));
+        factory.create(serviceGenerator, serviceDescriptor);
+        Assert.assertEquals("argument", module.parameter.get());
+    }
+
+    @Test
+    public void whenMethodParameterHasDefaultAnnotationButEntryIsNotPresentInCollaboratorsMapANotParameterizedCollaboratorDescriptorWithDefaultNameIsUsed() throws NoSuchMethodException {
+        final SpyModuleWithDefaults module = new SpyModuleWithDefaults();
+        final Method method = SpyModuleWithDefaults.class.getDeclaredMethod("spy", ServiceGenerator.class, String.class, Object.class);
+        final ServiceFactory factory = new MethodBackedServiceFactory(module, method);
+        final SpyServiceGenerator serviceGenerator = new SpyServiceGenerator();
+        final ServiceDescriptor serviceDescriptor = new ServiceDescriptor("spy",
+                Collections.singletonMap("parameter", "argument"),
+                Collections.emptyMap());
+        factory.create(serviceGenerator, serviceDescriptor);
+        Assert.assertEquals(SpyModuleWithDefaults.DEFAULT_COLLABORATOR, serviceGenerator.serviceDescriptor.get().name);
+    }
+
+    @Test
+    public void whenMethodParameterHasRoleAnnotationAndTheCollaboratorsMapContainsTheDescriptorTheDefaultDescriptorIsIgnored() throws NoSuchMethodException {
+        final SpyModuleWithDefaults module = new SpyModuleWithDefaults();
+        final Method method = SpyModuleWithDefaults.class.getDeclaredMethod("spy", ServiceGenerator.class, String.class, Object.class);
+        final ServiceFactory factory = new MethodBackedServiceFactory(module, method);
+        final SpyServiceGenerator serviceGenerator = new SpyServiceGenerator();
+        final ServiceDescriptor collaboratorDescriptor = new ServiceDescriptor("collaborator",
+                Collections.emptyMap(),
+                Collections.emptyMap());
+        final ServiceDescriptor serviceDescriptor = new ServiceDescriptor("spy",
+                Collections.singletonMap("parameter", "argument"),
+                Collections.singletonMap("role", collaboratorDescriptor));
+        factory.create(serviceGenerator, serviceDescriptor);
+        Assert.assertEquals(collaboratorDescriptor, serviceGenerator.serviceDescriptor.get());
+    }
+
     private static class StubModule {
 
         public String stringService() {
@@ -145,6 +204,27 @@ public class MethodBackedServiceFactoryTest {
                 ServiceGenerator serviceGenerator,
                 @Parameter("parameter") String parameter,
                 @Role("role") Object collaborator
+        ) {
+            this.serviceGenerator = Optional.of(serviceGenerator);
+            this.parameter = Optional.of(parameter);
+            this.collaborator = Optional.of(collaborator);
+            return new Object();
+        }
+    }
+
+    private static class SpyModuleWithDefaults {
+
+        public static final String DEFAULT_PARAMETER = "defaultParameter";
+        public static final String DEFAULT_COLLABORATOR = "defaultCollaborator";
+
+        public Optional<ServiceGenerator> serviceGenerator = Optional.empty();
+        public Optional<String> parameter = Optional.empty();
+        public Optional<Object> collaborator = Optional.empty();
+
+        public Object spy(
+                ServiceGenerator serviceGenerator,
+                @Parameter("parameter") @Default(DEFAULT_PARAMETER) String parameter,
+                @Role("role") @Default(DEFAULT_COLLABORATOR) Object collaborator
         ) {
             this.serviceGenerator = Optional.of(serviceGenerator);
             this.parameter = Optional.of(parameter);
