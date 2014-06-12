@@ -1,7 +1,9 @@
-package dev.deadc0de.genesis.module;
+package dev.deadc0de.genesis.module.factory;
 
 import dev.deadc0de.genesis.ServiceDescriptor;
 import dev.deadc0de.genesis.ServiceGenerator;
+import dev.deadc0de.genesis.module.Default;
+import dev.deadc0de.genesis.module.Parameter;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import org.junit.Assert;

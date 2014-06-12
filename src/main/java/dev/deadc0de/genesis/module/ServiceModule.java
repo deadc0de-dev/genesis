@@ -1,5 +1,6 @@
 package dev.deadc0de.genesis.module;
 
+import dev.deadc0de.genesis.module.factory.MethodBackedServiceFactory;
 import dev.deadc0de.genesis.ServiceFactory;
 import java.lang.reflect.Modifier;
 import java.util.stream.Stream;

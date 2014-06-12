@@ -1,8 +1,10 @@
-package dev.deadc0de.genesis.module;
+package dev.deadc0de.genesis.module.factory;
 
 import dev.deadc0de.genesis.AbstractServiceFactory;
 import dev.deadc0de.genesis.ServiceDescriptor;
 import dev.deadc0de.genesis.ServiceGenerator;
+import dev.deadc0de.genesis.module.Parameter;
+import dev.deadc0de.genesis.module.Role;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
