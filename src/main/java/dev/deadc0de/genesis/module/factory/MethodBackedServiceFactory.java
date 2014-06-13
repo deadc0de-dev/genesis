@@ -3,8 +3,6 @@ package dev.deadc0de.genesis.module.factory;
 import dev.deadc0de.genesis.AbstractServiceFactory;
 import dev.deadc0de.genesis.ServiceDescriptor;
 import dev.deadc0de.genesis.ServiceGenerator;
-import dev.deadc0de.genesis.module.Parameter;
-import dev.deadc0de.genesis.module.Role;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -18,11 +16,11 @@ public class MethodBackedServiceFactory extends AbstractServiceFactory {
     private final Method method;
     private final List<BiFunction<ServiceGenerator, ServiceDescriptor, Object>> argumentResolvers;
 
-    public MethodBackedServiceFactory(Object module, Method method) {
+    public MethodBackedServiceFactory(Object module, Method method, ArgumentResolverFactory argumentResolverFactory) {
         super(method.getName(), method.getReturnType());
         this.module = module;
         this.method = method;
-        argumentResolvers = Stream.of(method.getParameters()).map(MethodBackedServiceFactory::createArgumentResolver).collect(Collectors.toList());
+        argumentResolvers = Stream.of(method.getParameters()).map(argumentResolverFactory::createArgumentResolver).collect(Collectors.toList());
     }
 
     @Override
@@ -33,19 +31,5 @@ public class MethodBackedServiceFactory extends AbstractServiceFactory {
         } catch (IllegalAccessException | InvocationTargetException exception) {
             throw new IllegalStateException(exception.getMessage(), exception);
         }
-    }
-
-    private static BiFunction<ServiceGenerator, ServiceDescriptor, Object> createArgumentResolver(java.lang.reflect.Parameter methodParameter) {
-        final Class<?> parameterType = methodParameter.getType();
-        if (parameterType.equals(ServiceGenerator.class)) {
-            return (serviceGenerator, serviceDescriptor) -> serviceGenerator;
-        }
-        if (methodParameter.isAnnotationPresent(Parameter.class)) {
-            return new ParameterResolver(methodParameter);
-        }
-        if (methodParameter.isAnnotationPresent(Role.class)) {
-            return new RoleResolver(methodParameter);
-        }
-        throw new IllegalStateException("cannot fill argument of type " + parameterType);
     }
 }

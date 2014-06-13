@@ -9,35 +9,35 @@ public class ServiceModuleTest {
 
     @Test
     public void factoriesAreAssembledFromPublicStaticMethods() {
-        final Stream<ServiceFactory> assembledFactories = ServiceModule.assembleServiceFactories(new ConfigurationWithPublicStaticMethod());
+        final Stream<ServiceFactory> assembledFactories = ServiceModule.assembleServiceFactories(new ModuleWithPublicStaticMethod());
         Assert.assertEquals(1, assembledFactories.count());
     }
 
     @Test
     public void factoriesAreAssembledFromPublicInstanceMethods() {
-        final Stream<ServiceFactory> assembledFactories = ServiceModule.assembleServiceFactories(new ConfigurationWithPublicInstanceMethod());
+        final Stream<ServiceFactory> assembledFactories = ServiceModule.assembleServiceFactories(new ModuleWithPublicInstanceMethod());
         Assert.assertEquals(1, assembledFactories.count());
     }
 
     @Test
     public void nonPublicMethodsAreNotUsedToAssembleFactories() {
-        final Stream<ServiceFactory> assembledFactories = ServiceModule.assembleServiceFactories(new ConfigurationWithoutPublicMethods());
+        final Stream<ServiceFactory> assembledFactories = ServiceModule.assembleServiceFactories(new ModuleWithoutPublicMethods());
         Assert.assertEquals(0, assembledFactories.count());
     }
 
-    private static class ConfigurationWithPublicStaticMethod {
+    private static class ModuleWithPublicStaticMethod {
 
         public static void nothing() {
         }
     }
 
-    private static class ConfigurationWithPublicInstanceMethod {
+    private static class ModuleWithPublicInstanceMethod {
 
         public void nothing() {
         }
     }
 
-    private static class ConfigurationWithoutPublicMethods {
+    private static class ModuleWithoutPublicMethods {
 
         private void privateInstanceMethod() {
         }
@@ -51,10 +51,10 @@ public class ServiceModuleTest {
         protected static void protectedStaticMethod() {
         }
 
-        void instanceMethod() {
+        void packageProtectedInstanceMethod() {
         }
 
-        static void staticMethod() {
+        static void packageProtectedStaticMethod() {
         }
     }
 }
