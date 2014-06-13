@@ -13,10 +13,10 @@ public class GenerationContext implements ServiceGenerator {
         this.context = serviceFactories.collect(
                 Collectors.groupingBy(ServiceFactory::serviceType,
                         Collectors.groupingBy(ServiceFactory::serviceName,
-                                Collectors.reducing(null, GenerationContext::onlyOneFactory))));
+                                Collectors.reducing(null, GenerationContext::ensureNoDuplicateFactories))));
     }
 
-    private static ServiceFactory onlyOneFactory(ServiceFactory former, ServiceFactory latter) {
+    private static ServiceFactory ensureNoDuplicateFactories(ServiceFactory former, ServiceFactory latter) {
         if (former != null) {
             throw new IllegalArgumentException(String.format("found two service factories with same name and type (%s, %s)", former.serviceName(), former.serviceType()));
         }
