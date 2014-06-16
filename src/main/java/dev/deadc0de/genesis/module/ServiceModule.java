@@ -11,11 +11,11 @@ import java.util.stream.Stream;
 
 public interface ServiceModule {
 
-    default Stream<ServiceFactory> assembleServiceFactories() {
-        return assembleServiceFactories(this);
+    default Stream<ServiceFactory> assemble() {
+        return assembleModule(this);
     }
 
-    static Stream<ServiceFactory> assembleServiceFactories(Object module) {
+    static Stream<ServiceFactory> assembleModule(Object module) {
         final ArgumentResolverFactory argumentResolverFactory = new DispatchingArgumentResolverFactory(ParameterResolver::new, RoleResolver::new);
         return Stream.of(module.getClass().getDeclaredMethods())
                 .filter(method -> Modifier.isPublic(method.getModifiers()))

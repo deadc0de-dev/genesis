@@ -9,19 +9,19 @@ public class ServiceModuleTest {
 
     @Test
     public void factoriesAreAssembledFromPublicStaticMethods() {
-        final Stream<ServiceFactory> assembledFactories = ServiceModule.assembleServiceFactories(new ModuleWithPublicStaticMethod());
+        final Stream<ServiceFactory> assembledFactories = ServiceModule.assembleModule(new ModuleWithPublicStaticMethod());
         Assert.assertEquals(1, assembledFactories.count());
     }
 
     @Test
     public void factoriesAreAssembledFromPublicInstanceMethods() {
-        final Stream<ServiceFactory> assembledFactories = ServiceModule.assembleServiceFactories(new ModuleWithPublicInstanceMethod());
+        final Stream<ServiceFactory> assembledFactories = ServiceModule.assembleModule(new ModuleWithPublicInstanceMethod());
         Assert.assertEquals(1, assembledFactories.count());
     }
 
     @Test
     public void nonPublicMethodsAreNotUsedToAssembleFactories() {
-        final Stream<ServiceFactory> assembledFactories = ServiceModule.assembleServiceFactories(new ModuleWithoutPublicMethods());
+        final Stream<ServiceFactory> assembledFactories = ServiceModule.assembleModule(new ModuleWithoutPublicMethods());
         Assert.assertEquals(0, assembledFactories.count());
     }
 
