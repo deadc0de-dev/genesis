@@ -17,7 +17,7 @@ public class ParameterResolver implements BiFunction<ServiceGenerator, ServiceDe
             throw new IllegalArgumentException("method parameter must be annotated with @Parameter");
         }
         if (!methodParameter.getType().equals(String.class)) {
-            throw new IllegalArgumentException("method parameter must be of type String, but found " + methodParameter.getType());
+            throw new IllegalArgumentException("method parameter must be of type String, but found " + methodParameter.getType().getCanonicalName());
         }
         parameterName = methodParameter.getAnnotation(Parameter.class).value();
         defaultValue = Optional.ofNullable(methodParameter.getAnnotation(Default.class)).map(Default::value);
@@ -30,6 +30,6 @@ public class ParameterResolver implements BiFunction<ServiceGenerator, ServiceDe
         } else if (defaultValue.isPresent()) {
             return defaultValue.get();
         }
-        throw new IllegalArgumentException(String.format("missing parameter %s for service %s", parameterName, serviceDescriptor.name));
+        throw new IllegalStateException(String.format("missing parameter: %s", parameterName));
     }
 }

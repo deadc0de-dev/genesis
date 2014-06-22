@@ -31,6 +31,6 @@ public class RoleResolver implements BiFunction<ServiceGenerator, ServiceDescrip
             final ServiceDescriptor collaboratorDescriptor = defaultCollaboratorDescriptor.get();
             return serviceGenerator.generate(collaboratorType, collaboratorDescriptor);
         }
-        throw new IllegalArgumentException(String.format("missing collaborator with role %s for service %s", roleName, serviceDescriptor.name));
+        throw new IllegalStateException(String.format("missing collaborator: %s (%s)", roleName, collaboratorType.getCanonicalName()));
     }
 }

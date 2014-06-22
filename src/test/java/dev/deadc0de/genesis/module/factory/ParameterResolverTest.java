@@ -38,7 +38,7 @@ public class ParameterResolverTest {
         Assert.assertEquals(PARAMETER_VALUE, argument);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IllegalStateException.class)
     public void whenParameterNameIsMissingFromServiceConfigurationThenThrows() throws NoSuchMethodException {
         final Method method = TestModule.class.getDeclaredMethod("parameterNameMissingFromConfiguration", String.class);
         final ParameterResolver parameterResolver = new ParameterResolver(method.getParameters()[0]);

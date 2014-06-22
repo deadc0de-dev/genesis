@@ -51,7 +51,7 @@ public class RoleResolverTest {
         Assert.assertEquals(collaborator, argument);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IllegalStateException.class)
     public void whenServiceCollaboratorWithTheGivenRoleIsAbsentThenThrows() throws NoSuchMethodException {
         final Method method = TestModule.class.getDeclaredMethod("collaboratorWithGivenRoleIsMissing", Object.class);
         final RoleResolver roleResolver = new RoleResolver(method.getParameters()[0]);

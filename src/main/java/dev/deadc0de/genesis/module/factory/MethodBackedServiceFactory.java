@@ -2,6 +2,7 @@ package dev.deadc0de.genesis.module.factory;
 
 import dev.deadc0de.genesis.AbstractServiceFactory;
 import dev.deadc0de.genesis.ServiceDescriptor;
+import dev.deadc0de.genesis.ServiceGenerationException;
 import dev.deadc0de.genesis.ServiceGenerator;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -25,11 +26,16 @@ public class MethodBackedServiceFactory extends AbstractServiceFactory {
 
     @Override
     public Object create(ServiceGenerator serviceGenerator, ServiceDescriptor serviceDescriptor) {
-        final Object[] arguments = argumentResolvers.stream().map(argumentResolver -> argumentResolver.apply(serviceGenerator, serviceDescriptor)).toArray();
         try {
+            final Object[] arguments = argumentResolvers.stream().map(argumentResolver -> argumentResolver.apply(serviceGenerator, serviceDescriptor)).toArray();
             return method.invoke(module, arguments);
-        } catch (IllegalAccessException | InvocationTargetException exception) {
-            throw new IllegalStateException(exception.getMessage(), exception);
+        } catch (IllegalAccessException | InvocationTargetException | IllegalStateException exception) {
+            throw new ServiceGenerationException(this, exception);
         }
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + '@' + module.getClass().getCanonicalName();
     }
 }
