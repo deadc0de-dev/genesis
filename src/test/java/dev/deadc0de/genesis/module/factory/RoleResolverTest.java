@@ -5,7 +5,9 @@ import dev.deadc0de.genesis.ServiceGenerator;
 import dev.deadc0de.genesis.module.Default;
 import dev.deadc0de.genesis.module.Role;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -16,11 +18,31 @@ public class RoleResolverTest {
     private static final ServiceDescriptor SERVICE_DESCRIPTOR = new ServiceDescriptor(
             "service",
             Collections.emptyMap(),
-            Collections.singletonMap(ROLE_NAME, COLLABORATOR_DESCRIPTOR));
+            Collections.singletonMap(ROLE_NAME, Collections.singletonList(COLLABORATOR_DESCRIPTOR)));
+    private static final List<ServiceDescriptor> COLLABORATOR_DESCRIPTORS = Arrays.asList(
+            ServiceDescriptor.notParameterized("collaborator1"),
+            ServiceDescriptor.notParameterized("collaborator2"),
+            ServiceDescriptor.notParameterized("collaborator3"));
+    private static final ServiceDescriptor SERVICE_DESCRIPTOR_WITH_MULTIPLE_COLLABORATORS = new ServiceDescriptor(
+            "service",
+            Collections.emptyMap(),
+            Collections.singletonMap(ROLE_NAME, COLLABORATOR_DESCRIPTORS));
 
     @Test(expected = IllegalArgumentException.class)
     public void cannotCreateRoleResolverWhenTheMethodParameterIsNotAnnotatedWithTheRoleAnnotation() throws NoSuchMethodException {
         final Method method = TestModule.class.getDeclaredMethod("methodParameterNotAnnotated", Object.class);
+        final RoleResolver notCreated = new RoleResolver(method.getParameters()[0]);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void cannotCreateRoleResolverWhenTheMethodParameterTypeIsNotArrayAndMultipleDefaultValuesAreSpecified() throws NoSuchMethodException {
+        final Method method = TestModule.class.getDeclaredMethod("methodParameterOfNonArrayTypeWithMultipleDefaultValues", Object.class);
+        final RoleResolver notCreated = new RoleResolver(method.getParameters()[0]);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void cannotCreateRoleResolverWhenTheMethodParameterTypeIsNotArrayAndZeroDefaultValuesAreSpecified() throws NoSuchMethodException {
+        final Method method = TestModule.class.getDeclaredMethod("methodParameterOfNonArrayTypeWithZeroDefaultValues", Object.class);
         final RoleResolver notCreated = new RoleResolver(method.getParameters()[0]);
     }
 
@@ -112,15 +134,59 @@ public class RoleResolverTest {
         Assert.assertEquals(collaborator, argument);
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void whenCollaboratorIsNotOfTypeArrayAndServiceConfigurationContainsAnArrayOfCollaboratorsThenThrows() throws NoSuchMethodException {
+        final Method method = TestModule.class.getDeclaredMethod("collaboratorWithGivenRoleIsPresent", Object.class);
+        final RoleResolver roleResolver = new RoleResolver(method.getParameters()[0]);
+        roleResolver.apply(new DummyServiceGenerator(), SERVICE_DESCRIPTOR_WITH_MULTIPLE_COLLABORATORS);
+    }
+
+    @Test
+    public void whenCollaboratorIsPresentInServiceConfigurationThenTheComponentTypeOfTheCollaboratorsArrayIsPassedToTheServiceGenerator() throws NoSuchMethodException {
+        final Method method = TestModule.class.getDeclaredMethod("collaboratorWithGivenRoleIsPresent", Object[].class);
+        final RoleResolver roleResolver = new RoleResolver(method.getParameters()[0]);
+        final SpyServiceGenerator serviceGenerator = new SpyServiceGenerator();
+        roleResolver.apply(serviceGenerator, SERVICE_DESCRIPTOR);
+        Assert.assertEquals(Object.class, serviceGenerator.capturedServiceType);
+    }
+
+    @Test
+    public void whenCollaboratorIsPresentInServiceConfigurationThenAnArrayOfGeneratedCollaboratorsIsReturned() throws NoSuchMethodException {
+        final Object collaborator = new Object();
+        final Method method = TestModule.class.getDeclaredMethod("collaboratorWithGivenRoleIsPresent", Object[].class);
+        final RoleResolver roleResolver = new RoleResolver(method.getParameters()[0]);
+        final Object argument = roleResolver.apply(new StubServiceGenerator(collaborator), SERVICE_DESCRIPTOR_WITH_MULTIPLE_COLLABORATORS);
+        final Object[] expected = new Object[COLLABORATOR_DESCRIPTORS.size()];
+        Arrays.fill(expected, collaborator);
+        Assert.assertArrayEquals(expected, (Object[]) argument);
+    }
+
+    @Test
+    public void whenDefaultCollaboratorNamesAreProvidedAndCollaboratorsAreMissingFromServiceConfigurationThenTheDefaultCollaboratorsAreGenerated() throws NoSuchMethodException {
+        final Object collaborator = new Object();
+        final Method method = TestModule.class.getDeclaredMethod("defaultValueProvidedAndCollaboratorWithGivenRoleIsMissing", Object[].class);
+        final RoleResolver roleResolver = new RoleResolver(method.getParameters()[0]);
+        final Object argument = roleResolver.apply(new StubServiceGenerator(collaborator), SERVICE_DESCRIPTOR);
+        Assert.assertArrayEquals(new Object[]{collaborator, collaborator}, (Object[]) argument);
+    }
+
     private static class TestModule {
 
         public static final String DEFAULT_COLLABORATOR_NAME = "default collaborator";
-        private static final ServiceDescriptor DEFAULT_COLLABORATOR = ServiceDescriptor.notParameterized(DEFAULT_COLLABORATOR_NAME);
 
         public void methodParameterNotAnnotated(Object collaborator) {
         }
 
+        public void methodParameterOfNonArrayTypeWithMultipleDefaultValues(@Role(ROLE_NAME) @Default({"multiple", "collaborators"}) Object collaborator) {
+        }
+
+        public void methodParameterOfNonArrayTypeWithZeroDefaultValues(@Role(ROLE_NAME) @Default({}) Object collaborator) {
+        }
+
         public void collaboratorWithGivenRoleIsPresent(@Role(ROLE_NAME) Object collaborator) {
+        }
+
+        public void collaboratorWithGivenRoleIsPresent(@Role(ROLE_NAME) Object[] collaborators) {
         }
 
         public void collaboratorWithGivenRoleIsMissing(@Role("not present") Object collaborator) {
@@ -130,6 +196,9 @@ public class RoleResolverTest {
         }
 
         public void defaultValueProvidedAndCollaboratorWithGivenRoleIsMissing(@Role("not present") @Default(DEFAULT_COLLABORATOR_NAME) Object collaborator) {
+        }
+
+        public void defaultValueProvidedAndCollaboratorWithGivenRoleIsMissing(@Role("not present") @Default({"default", "collaborators"}) Object[] collaborator) {
         }
     }
 
