@@ -162,6 +162,14 @@ public class RoleResolverTest {
     }
 
     @Test
+    public void whenMethodParameterTypeIsArrayThenTheReturnedObjectIsAnArrayOfTheRequiredType() throws NoSuchMethodException {
+        final Method method = TestModule.class.getDeclaredMethod("collaboratorsArrayOfStringType", String[].class);
+        final RoleResolver roleResolver = new RoleResolver(method.getParameters()[0]);
+        final Object argument = roleResolver.apply(new StubServiceGenerator("collaborator"), SERVICE_DESCRIPTOR_WITH_MULTIPLE_COLLABORATORS);
+        Assert.assertEquals(String[].class, argument.getClass());
+    }
+
+    @Test
     public void whenDefaultCollaboratorNamesAreProvidedAndCollaboratorsAreMissingFromServiceConfigurationThenTheDefaultCollaboratorsAreGenerated() throws NoSuchMethodException {
         final Object collaborator = new Object();
         final Method method = TestModule.class.getDeclaredMethod("defaultValueProvidedAndCollaboratorWithGivenRoleIsMissing", Object[].class);
@@ -187,6 +195,9 @@ public class RoleResolverTest {
         }
 
         public void collaboratorWithGivenRoleIsPresent(@Role(ROLE_NAME) Object[] collaborators) {
+        }
+
+        public void collaboratorsArrayOfStringType(@Role(ROLE_NAME) String[] collaborators) {
         }
 
         public void collaboratorWithGivenRoleIsMissing(@Role("not present") Object collaborator) {
