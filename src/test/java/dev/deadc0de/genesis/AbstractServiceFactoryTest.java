@@ -1,5 +1,6 @@
 package dev.deadc0de.genesis;
 
+import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -39,6 +40,16 @@ public class AbstractServiceFactoryTest {
 
         public DummyAbstractServiceFactory(String serviceName, Class serviceType) {
             super(serviceName, serviceType);
+        }
+
+        @Override
+        public Map parameters() {
+            throw new UnsupportedOperationException("dummy implementation");
+        }
+
+        @Override
+        public Map roles() {
+            throw new UnsupportedOperationException("dummy implementation");
         }
 
         @Override

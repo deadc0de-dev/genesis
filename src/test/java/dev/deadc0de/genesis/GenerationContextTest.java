@@ -1,5 +1,7 @@
 package dev.deadc0de.genesis;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.Assert;
@@ -55,6 +57,16 @@ public class GenerationContextTest {
         }
 
         @Override
+        public Map parameters() {
+            throw new UnsupportedOperationException("dummy implementation");
+        }
+
+        @Override
+        public Map roles() {
+            throw new UnsupportedOperationException("dummy implementation");
+        }
+
+        @Override
         public Object create(ServiceGenerator serviceGenerator, ServiceDescriptor service) {
             throw new UnsupportedOperationException("dummy implementation");
         }
@@ -67,6 +79,16 @@ public class GenerationContextTest {
         public StubServiceFactory(Object service, String serviceName, Class serviceType) {
             super(serviceName, serviceType);
             this.service = service;
+        }
+
+        @Override
+        public Map parameters() {
+            return Collections.emptyMap();
+        }
+
+        @Override
+        public Map roles() {
+            return Collections.emptyMap();
         }
 
         @Override
@@ -84,6 +106,16 @@ public class GenerationContextTest {
             super(serviceName, serviceType);
             capturedGenerator = Optional.empty();
             capturedDescriptor = Optional.empty();
+        }
+
+        @Override
+        public Map parameters() {
+            return Collections.emptyMap();
+        }
+
+        @Override
+        public Map roles() {
+            return Collections.emptyMap();
         }
 
         @Override

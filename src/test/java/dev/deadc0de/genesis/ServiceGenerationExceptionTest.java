@@ -2,6 +2,7 @@ package dev.deadc0de.genesis;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -31,6 +32,16 @@ public class ServiceGenerationExceptionTest {
 
         @Override
         public Class serviceType() {
+            throw new UnsupportedOperationException("dummy implementation");
+        }
+
+        @Override
+        public Map parameters() {
+            throw new UnsupportedOperationException("dummy implementation");
+        }
+
+        @Override
+        public Map roles() {
             throw new UnsupportedOperationException("dummy implementation");
         }
 
