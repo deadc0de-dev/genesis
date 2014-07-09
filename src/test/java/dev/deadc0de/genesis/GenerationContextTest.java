@@ -13,20 +13,50 @@ public class GenerationContextTest {
     private static final ServiceDescriptor SERVICE = ServiceDescriptor.notParameterized(SERVICE_NAME);
 
     @Test(expected = IllegalArgumentException.class)
-    public void providingServiceFactoriesWithSameNameAndTypeThrows() {
+    public void whenServiceFactoriesWithSameNameAndTypeAreProvidedInConstructionThenThrows() {
         final ServiceFactory one = new DummyServiceFactory(SERVICE_NAME, Object.class);
         final ServiceFactory other = new DummyServiceFactory(SERVICE_NAME, Object.class);
         final GenerationContext notCreated = new GenerationContext(Stream.of(one, other));
     }
 
     @Test(expected = IllegalStateException.class)
-    public void generatingAServiceWithoutTheAssociatedFactoryThrows() {
-        final GenerationContext context = new GenerationContext(Stream.empty());
-        context.generate(Object.class, SERVICE);
+    public void whenGeneratingAServiceWithoutAFactoryOfACompatibleSubtypeThenThrows() {
+        final ServiceFactory integerFactory = new DummyServiceFactory(SERVICE_NAME, Integer.class);
+        final GenerationContext context = new GenerationContext(Stream.of(integerFactory));
+        context.generate(Double.class, SERVICE);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void whenMoreThanOneServiceFactoryTypeIsACompatibleSubtypeThenThrows() {
+        final ServiceFactory integerFactory = new DummyServiceFactory(SERVICE_NAME, Integer.class);
+        final ServiceFactory doubleFactory = new DummyServiceFactory(SERVICE_NAME, Double.class);
+        final GenerationContext context = new GenerationContext(Stream.of(integerFactory, doubleFactory));
+        context.generate(Number.class, SERVICE);
     }
 
     @Test
-    public void passesItselfAsServiceGeneratorToTheFactoryMatchingTheServiceNameAndType() {
+    public void returnsTheServiceGeneratedByTheFactoryMatchingTheServiceName() {
+        final Object expected = new Object();
+        final ServiceFactory factory = new StubServiceFactory(expected, SERVICE_NAME, Object.class);
+        final GenerationContext context = new GenerationContext(Stream.of(factory));
+        final Object generatedService = context.generate(Object.class, SERVICE);
+        Assert.assertEquals(expected, generatedService);
+    }
+
+    @Test
+    public void returnsTheServiceGeneratedByTheFactoryWithTheWidestSubtype() {
+        final Object wrong = new Object();
+        final Object expected = new Object();
+        final ServiceFactory objectFactory = new StubServiceFactory(wrong, SERVICE_NAME, Object.class);
+        final ServiceFactory numberFactory = new StubServiceFactory(wrong, SERVICE_NAME, Number.class);
+        final ServiceFactory integerFactory = new StubServiceFactory(expected, SERVICE_NAME, Integer.class);
+        final GenerationContext context = new GenerationContext(Stream.of(numberFactory, integerFactory, objectFactory));
+        final Object generatedService = context.generate(Object.class, SERVICE);
+        Assert.assertEquals(expected, generatedService);
+    }
+
+    @Test
+    public void passesItselfAsServiceGeneratorToTheChosenFactory() {
         final SpyServiceFactory factory = new SpyServiceFactory(SERVICE_NAME, Object.class);
         final GenerationContext context = new GenerationContext(Stream.of(factory));
         context.generate(Object.class, SERVICE);
@@ -34,20 +64,11 @@ public class GenerationContextTest {
     }
 
     @Test
-    public void passesTheGivenServiceDescriptorToTheFactoryMatchingTheServiceNameAndType() {
+    public void passesTheGivenServiceDescriptorToTheChosenFactory() {
         final SpyServiceFactory factory = new SpyServiceFactory(SERVICE_NAME, Object.class);
         final GenerationContext context = new GenerationContext(Stream.of(factory));
         context.generate(Object.class, SERVICE);
         Assert.assertEquals(SERVICE, factory.capturedDescriptor.get());
-    }
-
-    @Test
-    public void returnsTheServiceGeneratedByTheFactoryMatchingTheServiceNameAndType() {
-        final Object expected = new Object();
-        final ServiceFactory factory = new StubServiceFactory(expected, SERVICE_NAME, Object.class);
-        final GenerationContext context = new GenerationContext(Stream.of(factory));
-        final Object generatedService = context.generate(Object.class, SERVICE);
-        Assert.assertEquals(expected, generatedService);
     }
 
     private static class DummyServiceFactory extends AbstractServiceFactory {
